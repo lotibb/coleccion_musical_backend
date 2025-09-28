@@ -5,9 +5,6 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Render requires the server to bind to 0.0.0.0
-const HOST = process.env.NODE_ENV === 'production' ? '0.0.0.0' : 'localhost';
-
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -38,8 +35,17 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
-// Start server
-app.listen(PORT, HOST, () => {
-  console.log(`Server is running on ${HOST}:${PORT}`);
-  console.log(`Health check available at: http://${HOST}:${PORT}/api/health`);
-});
+// Start server - bind to all interfaces on Render, localhost for development
+if (process.env.PORT) {
+  // Render environment - bind to all interfaces
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server is running on 0.0.0.0:${PORT}`);
+    console.log(`Health check available at: http://0.0.0.0:${PORT}/api/health`);
+  });
+} else {
+  // Local development - bind to localhost
+  app.listen(PORT, 'localhost', () => {
+    console.log(`Server is running on localhost:${PORT}`);
+    console.log(`Health check available at: http://localhost:${PORT}/api/health`);
+  });
+}
