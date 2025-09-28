@@ -130,6 +130,48 @@ If the connection is successful, you'll see a JSON response with database inform
 3. **Module Not Found**
    - Run `npm install` to install all dependencies
 
+## Deploying to Render
+
+### Prerequisites
+- GitHub repository with your code
+- Render account
+
+### Deployment Steps
+
+1. **Connect to Render:**
+   - Go to [render.com](https://render.com)
+   - Sign up/Login with your GitHub account
+   - Click "New +" → "Web Service"
+
+2. **Configure the Service:**
+   - **Build Command:** `npm install`
+   - **Start Command:** `npm start`
+   - **Environment:** Node
+   - **Region:** Choose closest to your users
+
+3. **Environment Variables:**
+   Render will automatically provide `DATABASE_URL` if you connect a PostgreSQL database. You can also set:
+   ```
+   NODE_ENV=production
+   PORT=10000
+   ```
+
+4. **Database Setup:**
+   - In Render dashboard, create a new PostgreSQL database
+   - Render will automatically provide the `DATABASE_URL` environment variable
+   - No additional configuration needed!
+
+5. **Deploy:**
+   - Connect your GitHub repository
+   - Render will automatically deploy on every push to main branch
+
+### Render-Specific Features
+- ✅ Automatic `DATABASE_URL` handling
+- ✅ Production-ready server binding
+- ✅ SSL termination handled by Render
+- ✅ Automatic HTTPS
+- ✅ Zero-downtime deployments
+
 ## Next Steps
 
 This is a basic backend setup. You can extend it by adding:
