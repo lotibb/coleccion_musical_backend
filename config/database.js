@@ -123,6 +123,32 @@ async function getArtistas() {
   }
 }
 
+// Find single artist by name (case-insensitive)
+async function findArtistaPorNombre(nombre) {
+  let client;
+  try {
+    client = await pool.connect();
+
+    const result = await client.query(
+      `
+        SELECT id_artista, nombre, genero_musica
+        FROM artista
+        WHERE LOWER(nombre) = LOWER($1)
+        LIMIT 1
+      `,
+      [nombre]
+    );
+
+    return result.rows[0] || null;
+  } catch (error) {
+    throw new Error(`Failed to find artista by nombre: ${error.message}`);
+  } finally {
+    if (client) {
+      client.release();
+    }
+  }
+}
+
 // Create a new artist
 async function createArtista({ nombre, genero_musica }) {
   let client;
@@ -141,6 +167,61 @@ async function createArtista({ nombre, genero_musica }) {
     return result.rows[0];
   } catch (error) {
     throw new Error(`Failed to create artista: ${error.message}`);
+  } finally {
+    if (client) {
+      client.release();
+    }
+  }
+}
+
+// Update existing artist
+async function updateArtista(idArtista, { nombre, genero_musica }) {
+  let client;
+  try {
+    client = await pool.connect();
+
+    const fields = [];
+    const values = [];
+
+    if (typeof nombre === 'string') {
+      fields.push('nombre');
+      values.push(nombre);
+    }
+
+    if (typeof genero_musica === 'string') {
+      fields.push('genero_musica');
+      values.push(genero_musica);
+    }
+
+    if (fields.length === 0) {
+      throw new Error('No update fields provided');
+    }
+
+    const setClause = fields
+      .map((field, index) => `${field} = $${index + 1}`)
+      .join(', ');
+
+    values.push(idArtista);
+
+    const result = await client.query(
+      `
+        UPDATE artista
+        SET ${setClause}
+        WHERE id_artista = $${values.length}
+        RETURNING id_artista, nombre, genero_musica
+      `,
+      values
+    );
+
+    return result.rows[0] || null;
+  } catch (error) {
+    if (error.code === '23505') {
+      const duplicateError = new Error('Artist name already exists');
+      duplicateError.code = 'ARTISTA_DUPLICATE_NAME';
+      throw duplicateError;
+    }
+
+    throw error;
   } finally {
     if (client) {
       client.release();
@@ -169,6 +250,36 @@ async function getAlbumes() {
     return result.rows;
   } catch (error) {
     throw new Error(`Failed to fetch albumes: ${error.message}`);
+  } finally {
+    if (client) {
+      client.release();
+    }
+  }
+}
+
+// Retrieve albums for a specific artist
+async function getAlbumesPorArtista(idArtista) {
+  let client;
+  try {
+    client = await pool.connect();
+
+    const result = await client.query(
+      `
+        SELECT
+          id_album,
+          titulo_album,
+          anio_album,
+          id_artista
+        FROM albumes
+        WHERE id_artista = $1
+        ORDER BY titulo_album
+      `,
+      [idArtista]
+    );
+
+    return result.rows;
+  } catch (error) {
+    throw new Error(`Failed to fetch albumes for artista: ${error.message}`);
   } finally {
     if (client) {
       client.release();
@@ -220,11 +331,91 @@ async function createAlbum({ titulo_album, anio_album, id_artista }) {
   }
 }
 
+// Update existing album
+async function updateAlbum(idAlbum, { titulo_album, anio_album, id_artista }) {
+  let client;
+  try {
+    client = await pool.connect();
+
+    const fields = [];
+    const values = [];
+
+    if (typeof titulo_album === 'string') {
+      // Check for duplicate titles excluding current album
+      const duplicate = await client.query(
+        `SELECT id_album FROM albumes WHERE LOWER(titulo_album) = LOWER($1) AND id_album <> $2 LIMIT 1`,
+        [titulo_album, idAlbum]
+      );
+
+      if (duplicate.rowCount > 0) {
+        const error = new Error('Album title already exists');
+        error.code = 'ALBUM_TITLE_EXISTS';
+        throw error;
+      }
+
+      fields.push('titulo_album');
+      values.push(titulo_album);
+    }
+
+    if (Number.isInteger(anio_album)) {
+      fields.push('anio_album');
+      values.push(anio_album);
+    }
+
+    if (Number.isInteger(id_artista)) {
+      fields.push('id_artista');
+      values.push(id_artista);
+    }
+
+    if (fields.length === 0) {
+      throw new Error('No update fields provided');
+    }
+
+    const setClause = fields
+      .map((field, index) => `${field} = $${index + 1}`)
+      .join(', ');
+
+    values.push(idAlbum);
+
+    const result = await client.query(
+      `
+        UPDATE albumes
+        SET ${setClause}
+        WHERE id_album = $${values.length}
+        RETURNING id_album, titulo_album, anio_album, id_artista
+      `,
+      values
+    );
+
+    if (result.rowCount === 0) {
+      return null;
+    }
+
+    return result.rows[0];
+  } catch (error) {
+    if (error.code === '23503') {
+      const fkError = new Error('Specified artista does not exist');
+      fkError.code = 'ARTISTA_NOT_FOUND';
+      throw fkError;
+    }
+
+    throw error;
+  } finally {
+    if (client) {
+      client.release();
+    }
+  }
+}
+
 module.exports = {
   testDatabaseConnection,
   getColeccionMusical,
   getArtistas,
   getAlbumes,
+  findArtistaPorNombre,
+  getAlbumesPorArtista,
   createArtista,
-  createAlbum
+  updateArtista,
+  createAlbum,
+  updateAlbum
 };
