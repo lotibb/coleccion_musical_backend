@@ -1,0 +1,532 @@
+openapi: 3.0.3
+info:
+  title: Coleccion Musical Backend API
+  version: '1.0.0'
+  description: |
+    REST API for managing musical artists and albums stored in PostgreSQL.
+    All responses share a common envelope with `status`, `message`, optional `data`, and `timestamp` fields.
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+components:
+  schemas:
+    ApiResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        message:
+          type: string
+          example: Resource retrieved
+        data:
+          type: object
+          nullable: true
+        timestamp:
+          type: string
+          format: date-time
+          example: 2025-09-29T21:30:00.000Z
+    Artist:
+      type: object
+      properties:
+        id_artista:
+          type: integer
+          example: 26
+        nombre:
+          type: string
+          example: Ed Maverick
+        genero_musica:
+          type: string
+          example: Independiente
+      required:
+        - id_artista
+        - nombre
+        - genero_musica
+    Album:
+      type: object
+      properties:
+        id_album:
+          type: integer
+          example: 12
+        titulo_album:
+          type: string
+          example: Eduardo
+        anio_album:
+          type: integer
+          example: 2021
+        id_artista:
+          type: integer
+          example: 26
+      required:
+        - id_album
+        - titulo_album
+        - anio_album
+        - id_artista
+    ArtistCreateInput:
+      type: object
+      required:
+        - nombre
+        - genero_musica
+      properties:
+        nombre:
+          type: string
+          example: Ed Maverick
+        genero_musica:
+          type: string
+          example: Independiente
+    ArtistUpdateInput:
+      type: object
+      properties:
+        nombre:
+          type: string
+        genero_musica:
+          type: string
+    AlbumCreateInput:
+      type: object
+      required:
+        - titulo_album
+        - anio_album
+        - id_artista
+      properties:
+        titulo_album:
+          type: string
+          example: Eduardo
+        anio_album:
+          type: integer
+          example: 2021
+        id_artista:
+          type: integer
+          example: 26
+    AlbumUpdateInput:
+      type: object
+      properties:
+        titulo_album:
+          type: string
+        anio_album:
+          type: integer
+        id_artista:
+          type: integer
+paths:
+  /:
+    get:
+      summary: Root ping
+      description: Returns `OK!` when the service is reachable.
+      responses:
+        '200':
+          description: Plain text confirmation
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: OK!
+  /api/health:
+    get:
+      summary: Health check
+      description: Tests the PostgreSQL connection and returns database metadata.
+      responses:
+        '200':
+          description: Database reachable
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          database:
+                            type: object
+                            properties:
+                              connected:
+                                type: boolean
+                              currentTime:
+                                type: string
+                                format: date-time
+                              postgresVersion:
+                                type: string
+                              host:
+                                type: string
+                              database:
+                                type: string
+        '500':
+          description: Database connection failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/coleccion_musical:
+    get:
+      summary: Artists with albums
+      description: Returns every artist with their albums embedded.
+      responses:
+        '200':
+          description: Collection retrieved
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          artistas:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                id_artista:
+                                  type: integer
+                                nombre:
+                                  type: string
+                                genero_musica:
+                                  type: string
+                                albumes:
+                                  type: array
+                                  items:
+                                    type: object
+                                    properties:
+                                      id_album:
+                                        type: integer
+                                      titulo_album:
+                                        type: string
+                                      anio_album:
+                                        type: integer
+              examples:
+                sample:
+                  summary: Example collection response
+                  value:
+                    status: success
+                    message: Musical collection retrieved
+                    data:
+                      artistas:
+                        - id_artista: 3
+                          nombre: Adele
+                          genero_musica: Soul
+                          albumes:
+                            - id_album: 3
+                              titulo_album: '21'
+                              anio_album: 2011
+                        - id_artista: 18
+                          nombre: Ariana Grande
+                          genero_musica: Pop
+                          albumes:
+                            - id_album: 18
+                              titulo_album: Positions
+                              anio_album: 2020
+                        - id_artista: 5
+                          nombre: Billie Eilish
+                          genero_musica: Electropop
+                          albumes:
+                            - id_album: 5
+                              titulo_album: 'When We All Fall Asleep, Where Do We Go?'
+                              anio_album: 2019
+                    timestamp: '2025-09-29T05:04:37.360Z'
+  /api/artistas:
+    get:
+      summary: List artists
+      responses:
+        '200':
+          description: Artists retrieved
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          artistas:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/Artist'
+              examples:
+                sample:
+                  summary: Artists example
+                  value:
+                    status: success
+                    message: Artists retrieved
+                    data:
+                      artistas:
+                        - id_artista: 3
+                          nombre: Adele
+                          genero_musica: Soul
+                        - id_artista: 18
+                          nombre: Ariana Grande
+                          genero_musica: Pop
+                        - id_artista: 5
+                          nombre: Billie Eilish
+                          genero_musica: Electropop
+                    timestamp: '2025-09-29T05:07:55.338Z'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/agregar_artista:
+    post:
+      summary: Create artist
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArtistCreateInput'
+      responses:
+        '201':
+          description: Artist created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          artista:
+                            $ref: '#/components/schemas/Artist'
+        '400':
+          description: Missing fields
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '409':
+          description: Duplicate artist name
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '500':
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/artistas/{id}:
+    patch:
+      summary: Update artist
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArtistUpdateInput'
+      responses:
+        '200':
+          description: Artist updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          artista:
+                            $ref: '#/components/schemas/Artist'
+        '400':
+          description: Invalid payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          description: Artist not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '409':
+          description: Duplicate artist name
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '500':
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/artistas/nombre/{nombre}/albumes:
+    get:
+      summary: Albums by artist name
+      parameters:
+        - name: nombre
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Albums found (may be empty)
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          artista:
+                            $ref: '#/components/schemas/Artist'
+                          albumes:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/Album'
+        '400':
+          description: Missing name
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          description: Artist not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '500':
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/albumes:
+    get:
+      summary: List albums
+      responses:
+        '200':
+          description: Albums retrieved
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          albumes:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/Album'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/agregar_album:
+    post:
+      summary: Create album
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AlbumCreateInput'
+      responses:
+        '201':
+          description: Album created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          album:
+                            $ref: '#/components/schemas/Album'
+        '400':
+          description: Invalid payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          description: Artist not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '409':
+          description: Duplicate album title
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '500':
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/albumes/{id}:
+    patch:
+      summary: Update album
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AlbumUpdateInput'
+      responses:
+        '200':
+          description: Album updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          album:
+                            $ref: '#/components/schemas/Album'
+        '400':
+          description: Invalid payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          description: Album or referenced artist not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '409':
+          description: Duplicate album title
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '500':
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
