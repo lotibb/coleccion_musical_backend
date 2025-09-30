@@ -360,6 +360,102 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+
+
+    delete:
+      summary: Delete artist
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Artist deleted
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          artista:
+                            $ref: '#/components/schemas/Artist'
+              examples:
+                artistDeleted:
+                  summary: Eliminacion exitosa
+                  value:
+                    status: success
+                    message: Artista eliminado
+                    data:
+                      artista:
+                        id_artista: 26
+                        nombre: Ed Maverick
+                        genero_musica: Independiente
+                    timestamp: '2025-09-30T12:00:00Z'
+        '400':
+          description: Invalid id
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              examples:
+                invalidId:
+                  summary: id no valido
+                  value:
+                    status: error
+                    message: id debe ser un numero entero
+                    data:
+                      field: id
+                    timestamp: '2025-09-30T12:00:00Z'
+        '404':
+          description: Artist not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              examples:
+                notFound:
+                  summary: Artista inexistente
+                  value:
+                    status: error
+                    message: Artista no encontrado
+                    data:
+                      id_artista: 99
+                    timestamp: '2025-09-30T12:00:00Z'
+        '409':
+          description: Artist has related records
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              examples:
+                hasDependencies:
+                  summary: El artista tiene dependencias
+                  value:
+                    status: error
+                    message: No se puede eliminar el artista porque tiene registros asociados
+                    data:
+                      id_artista: 26
+                    timestamp: '2025-09-30T12:00:00Z'
+        '500':
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              examples:
+                serverError:
+                  summary: Error inesperado
+                  value:
+                    status: error
+                    message: Error al eliminar artista
+                    data:
+                      error: Descripcion del error
+                    timestamp: '2025-09-30T12:00:00Z'
   /api/artistas/nombre/{nombre}/albumes:
     get:
       summary: Albums by artist name
@@ -530,3 +626,100 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+
+
+    delete:
+      summary: Delete album
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Album deleted
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          album:
+                            $ref: '#/components/schemas/Album'
+              examples:
+                albumDeleted:
+                  summary: Eliminacion exitosa
+                  value:
+                    status: success
+                    message: Album eliminado
+                    data:
+                      album:
+                        id_album: 12
+                        titulo_album: Eduardo
+                        anio_album: 2021
+                        id_artista: 26
+                    timestamp: '2025-09-30T12:00:00Z'
+        '400':
+          description: Invalid id
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              examples:
+                invalidId:
+                  summary: id no valido
+                  value:
+                    status: error
+                    message: id debe ser un numero entero
+                    data:
+                      field: id
+                    timestamp: '2025-09-30T12:00:00Z'
+        '404':
+          description: Album not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              examples:
+                notFound:
+                  summary: Album inexistente
+                  value:
+                    status: error
+                    message: Album no encontrado
+                    data:
+                      id_album: 99
+                    timestamp: '2025-09-30T12:00:00Z'
+        '409':
+          description: Album has related records
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              examples:
+                hasDependencies:
+                  summary: El album tiene dependencias
+                  value:
+                    status: error
+                    message: No se puede eliminar el album porque tiene registros asociados
+                    data:
+                      id_album: 12
+                    timestamp: '2025-09-30T12:00:00Z'
+        '500':
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              examples:
+                serverError:
+                  summary: Error inesperado
+                  value:
+                    status: error
+                    message: Error al eliminar album
+                    data:
+                      error: Descripcion del error
+                    timestamp: '2025-09-30T12:00:00Z'

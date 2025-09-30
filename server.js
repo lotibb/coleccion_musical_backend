@@ -26,8 +26,10 @@ const {
   getAlbumesPorArtista,
   createArtista,
   updateArtista,
+  deleteArtista,
   createAlbum,
-  updateAlbum
+  updateAlbum,
+  deleteAlbum
 } = require('./config/database');
 
 // Helper function for consistent API responses
@@ -58,7 +60,7 @@ app.get('/api/coleccion_musical', async (req, res) => {
   try {
     const coleccion = await getColeccionMusical();
     res.json(
-      createResponse('success', 'Musical collection retrieved', {
+      createResponse('success', 'Coleccion musical obtenida', {
         artistas: coleccion
       })
     );
@@ -66,7 +68,7 @@ app.get('/api/coleccion_musical', async (req, res) => {
     res
       .status(500)
       .json(
-        createResponse('error', 'Failed to fetch musical collection', {
+        createResponse('error', 'Error al obtener la coleccion musical', {
           error: error.message
         })
       );
@@ -78,7 +80,7 @@ app.get('/api/artistas', async (req, res) => {
   try {
     const artistas = await getArtistas();
     res.json(
-      createResponse('success', 'Artists retrieved', {
+      createResponse('success', 'Artistas obtenidos', {
         artistas
       })
     );
@@ -86,7 +88,7 @@ app.get('/api/artistas', async (req, res) => {
     res
       .status(500)
       .json(
-        createResponse('error', 'Failed to fetch artistas', {
+        createResponse('error', 'Error al obtener artistas', {
           error: error.message
         })
       );
@@ -103,7 +105,7 @@ app.post('/api/agregar_artista', async (req, res) => {
     return res
       .status(400)
       .json(
-        createResponse('error', 'nombre and genero_musica are required', {
+        createResponse('error', 'nombre y genero_musica son obligatorios', {
           required: ['nombre', 'genero_musica']
         })
       );
@@ -122,7 +124,7 @@ app.post('/api/agregar_artista', async (req, res) => {
     res
       .status(500)
       .json(
-        createResponse('error', 'Failed to create artista', {
+        createResponse('error', 'Error al crear artista', {
           error: error.message
         })
       );
@@ -157,7 +159,7 @@ app.post('/api/agregar_album', async (req, res) => {
     return res
       .status(400)
       .json(
-        createResponse('error', 'titulo_album, anio_album and id_artista are required', {
+        createResponse('error', 'titulo_album, anio_album e id_artista son obligatorios', {
           required: ['titulo_album', 'anio_album', 'id_artista'],
           invalid: validationErrors
         })
@@ -198,7 +200,7 @@ app.post('/api/agregar_album', async (req, res) => {
     res
       .status(500)
       .json(
-        createResponse('error', 'Failed to create album', {
+        createResponse('error', 'Error al crear album', {
           error: error.message
         })
       );
@@ -213,7 +215,7 @@ app.get('/api/artistas/nombre/:nombre/albumes', async (req, res) => {
     return res
       .status(400)
       .json(
-        createResponse('error', 'nombre is required', {
+        createResponse('error', 'nombre es obligatorio', {
           field: 'nombre'
         })
       );
@@ -244,7 +246,7 @@ app.get('/api/artistas/nombre/:nombre/albumes', async (req, res) => {
     }
 
     res.json(
-      createResponse('success', 'Albumes retrieved for artista', {
+      createResponse('success', 'Albumes obtenidos para el artista', {
         artista,
         albumes
       })
@@ -253,7 +255,7 @@ app.get('/api/artistas/nombre/:nombre/albumes', async (req, res) => {
     res
       .status(500)
       .json(
-        createResponse('error', 'Failed to fetch albumes for artista', {
+        createResponse('error', 'Error al obtener los albumes del artista', {
           error: error.message
         })
       );
@@ -268,7 +270,7 @@ app.patch('/api/artistas/:id', async (req, res) => {
     return res
       .status(400)
       .json(
-        createResponse('error', 'id must be an integer', {
+        createResponse('error', 'id debe ser un numero entero', {
           field: 'id'
         })
       );
@@ -297,7 +299,7 @@ app.patch('/api/artistas/:id', async (req, res) => {
     return res
       .status(400)
       .json(
-        createResponse('error', 'Invalid artist fields', {
+        createResponse('error', 'Campos de artista invalidos', {
           invalid: invalidFields
         })
       );
@@ -307,7 +309,7 @@ app.patch('/api/artistas/:id', async (req, res) => {
     return res
       .status(400)
       .json(
-        createResponse('error', 'No fields provided to update', {
+        createResponse('error', 'No se proporcionaron campos para actualizar', {
           allowed: ['nombre', 'genero_musica']
         })
       );
@@ -342,7 +344,7 @@ app.patch('/api/artistas/:id', async (req, res) => {
       return res
         .status(400)
         .json(
-          createResponse('error', 'No fields provided to update', {
+          createResponse('error', 'No se proporcionaron campos para actualizar', {
             allowed: ['nombre', 'genero_musica']
           })
         );
@@ -351,7 +353,7 @@ app.patch('/api/artistas/:id', async (req, res) => {
     res
       .status(500)
       .json(
-        createResponse('error', 'Failed to update artista', {
+        createResponse('error', 'Error al actualizar artista', {
           error: error.message
         })
       );
@@ -366,7 +368,7 @@ app.patch('/api/albumes/:id', async (req, res) => {
     return res
       .status(400)
       .json(
-        createResponse('error', 'id must be an integer', {
+        createResponse('error', 'id debe ser un numero entero', {
           field: 'id'
         })
       );
@@ -405,7 +407,7 @@ app.patch('/api/albumes/:id', async (req, res) => {
     return res
       .status(400)
       .json(
-        createResponse('error', 'Invalid album fields', {
+        createResponse('error', 'Campos de album invalidos', {
           invalid: invalidFields
         })
       );
@@ -415,7 +417,7 @@ app.patch('/api/albumes/:id', async (req, res) => {
     return res
       .status(400)
       .json(
-        createResponse('error', 'No fields provided to update', {
+        createResponse('error', 'No se proporcionaron campos para actualizar', {
           allowed: ['titulo_album', 'anio_album', 'id_artista']
         })
       );
@@ -460,7 +462,7 @@ app.patch('/api/albumes/:id', async (req, res) => {
       return res
         .status(400)
         .json(
-          createResponse('error', 'No fields provided to update', {
+          createResponse('error', 'No se proporcionaron campos para actualizar', {
             allowed: ['titulo_album', 'anio_album', 'id_artista']
           })
         );
@@ -469,7 +471,105 @@ app.patch('/api/albumes/:id', async (req, res) => {
     res
       .status(500)
       .json(
-        createResponse('error', 'Failed to update album', {
+        createResponse('error', 'Error al actualizar album', {
+          error: error.message
+        })
+      );
+  }
+});
+
+// Delete artist endpoint
+app.delete('/api/artistas/:id', async (req, res) => {
+  const idArtista = Number.parseInt(req.params.id, 10);
+
+  if (!Number.isInteger(idArtista)) {
+    return res
+      .status(400)
+      .json(
+        createResponse('error', 'id debe ser un numero entero', {
+          field: 'id'
+        })
+      );
+  }
+
+  try {
+    const artista = await deleteArtista(idArtista);
+
+    if (!artista) {
+      return res
+        .status(404)
+        .json(
+          createResponse('error', 'Artista no encontrado', {
+            id_artista: idArtista
+          })
+        );
+    }
+
+    res.json(createResponse('success', 'Artista eliminado', { artista }));
+  } catch (error) {
+    if (error.code === 'ARTISTA_HAS_DEPENDENCIES') {
+      return res
+        .status(409)
+        .json(
+          createResponse('error', 'No se puede eliminar el artista porque tiene registros asociados', {
+            id_artista: idArtista
+          })
+        );
+    }
+
+    res
+      .status(500)
+      .json(
+        createResponse('error', 'Error al eliminar artista', {
+          error: error.message
+        })
+      );
+  }
+});
+
+// Delete album endpoint
+app.delete('/api/albumes/:id', async (req, res) => {
+  const idAlbum = Number.parseInt(req.params.id, 10);
+
+  if (!Number.isInteger(idAlbum)) {
+    return res
+      .status(400)
+      .json(
+        createResponse('error', 'id debe ser un numero entero', {
+          field: 'id'
+        })
+      );
+  }
+
+  try {
+    const album = await deleteAlbum(idAlbum);
+
+    if (!album) {
+      return res
+        .status(404)
+        .json(
+          createResponse('error', 'Album no encontrado', {
+            id_album: idAlbum
+          })
+        );
+    }
+
+    res.json(createResponse('success', 'Album eliminado', { album }));
+  } catch (error) {
+    if (error.code === 'ALBUM_HAS_DEPENDENCIES') {
+      return res
+        .status(409)
+        .json(
+          createResponse('error', 'No se puede eliminar el album porque tiene registros asociados', {
+            id_album: idAlbum
+          })
+        );
+    }
+
+    res
+      .status(500)
+      .json(
+        createResponse('error', 'Error al eliminar album', {
           error: error.message
         })
       );
@@ -481,7 +581,7 @@ app.get('/api/albumes', async (req, res) => {
   try {
     const albumes = await getAlbumes();
     res.json(
-      createResponse('success', 'Albumes retrieved', {
+      createResponse('success', 'Albumes obtenidos', {
         albumes
       })
     );
@@ -489,7 +589,7 @@ app.get('/api/albumes', async (req, res) => {
     res
       .status(500)
       .json(
-        createResponse('error', 'Failed to fetch albumes', {
+        createResponse('error', 'Error al obtener albumes', {
           error: error.message
         })
       );

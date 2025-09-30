@@ -407,6 +407,60 @@ async function updateAlbum(idAlbum, { titulo_album, anio_album, id_artista }) {
   }
 }
 
+
+// Delete existing album
+async function deleteAlbum(idAlbum) {
+  let client;
+  try {
+    client = await pool.connect();
+
+    const result = await client.query(
+      'DELETE FROM albumes WHERE id_album = $1 RETURNING id_album, titulo_album, anio_album, id_artista',
+      [idAlbum]
+    );
+
+    return result.rows[0] || null;
+  } catch (error) {
+    if (error.code === '23503') {
+      const fkError = new Error('Cannot delete album with related records');
+      fkError.code = 'ALBUM_HAS_DEPENDENCIES';
+      throw fkError;
+    }
+
+    throw error;
+  } finally {
+    if (client) {
+      client.release();
+    }
+  }
+}
+// Delete existing artist
+async function deleteArtista(idArtista) {
+  let client;
+  try {
+    client = await pool.connect();
+
+    const result = await client.query(
+      'DELETE FROM artista WHERE id_artista = $1 RETURNING id_artista, nombre, genero_musica',
+      [idArtista]
+    );
+
+    return result.rows[0] || null;
+  } catch (error) {
+    if (error.code === '23503') {
+      const fkError = new Error('Cannot delete artista with related records');
+      fkError.code = 'ARTISTA_HAS_DEPENDENCIES';
+      throw fkError;
+    }
+
+    throw error;
+  } finally {
+    if (client) {
+      client.release();
+    }
+  }
+}
+
 module.exports = {
   testDatabaseConnection,
   getColeccionMusical,
@@ -416,6 +470,8 @@ module.exports = {
   getAlbumesPorArtista,
   createArtista,
   updateArtista,
+  deleteArtista,
   createAlbum,
-  updateAlbum
+  updateAlbum,
+  deleteAlbum
 };
